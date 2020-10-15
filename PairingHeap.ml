@@ -182,4 +182,22 @@ merge_pairs h = match h with
     | leaf        → (lx, x, leaf)
     | (ly, y, ry) → (link (link (lx, x, (ly, y, merge_pairs ry))))
 
-(* TODO: merge_pairs with link calls inlined *)
+merge_pairs_nolink ∷ Ord α ⇒ Tree α → Tree α
+merge_pairs_nolink h = match h with
+  | leaf -> leaf
+  | (la, a, ra) -> match ra with
+    | leaf -> (la, a, leaf)
+    | (lb, b, rb) -> match merge_pairs_nolink rb with
+      | leaf -> if a < b
+        then ((lb, b, la), a, leaf)
+        else ((la, a, lb), b, leaf)
+      | (lc, c, rc) -> if a < b
+        then if a < c
+          then ((lc, c, (lb, b, la)), a, rc)
+          else (((lb, b, la), a, lc), c, rc)
+        else if b < c
+          then ((lc, c, (la, a, lb)), b, rc)
+          else (((la, a, lb), b, lc), c, rc)
+
+merge_pairs_via_pass ∷ Ord α ⇒ Tree α → Tree α
+merge_pairs_via_pass h = pass2 (pass1 h)
